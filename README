@@ -1,4 +1,7 @@
+
+
 *************************************************MAGiC***********************************************
+
 
 What's new in modified version
 -------------------------------------------------------------------
@@ -24,6 +27,7 @@ Instructions to run jar file with added features:
    2. Segment audio according to specific segments-interval file
       $path_JavaExe -cp $path_jarFile $className -i $input -o $segmentsOutputFolder -comb $combinedIntervalsFile
       (Eg: C:javapath\java.exe -cp sphinx4-core-all-1.0.jar edu.cmu.sphinx.tools.endpoint.Segmenter -i D:\1.wav -o D:\1\ -comb D:\combined_segments_interval.txt
+
 
 
 *************************************************MAGiC***********************************************
