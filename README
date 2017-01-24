@@ -1,3 +1,35 @@
+*************************************************MAGiC***********************************************
+
+What's new in modified version
+-------------------------------------------------------------------
+
+CMUSphinx does not generate segments for whole audio; for instance, 
+it does not generate segments for the parts especially when the speaker could not be identified. 
+However, those non-segmented parts might contain information useful for researchers. 
+Thus, we carried out additional development to automatically generate audio segments from non-segmented parts in an audio .  
+Furthermore, a function was implemented to create an output file including time-intervals of each segment in millisecond resolution.
+Also, we added a new functionality to segment audio with the specified intervals.
+Lastly, fatJAr plugin as added to create an executable jar file with all dependencies.
+  
+	
+Instructions to run jar file with added features:
+-------------------------------------------------------------------
+ 
+   Jar file is named: sphinx4-core-all-1.0.jar
+   
+   1.Segment whole audio and create segments-interval file
+      $path_JavaExe -cp $path_jarFile $className -i $input -o $segmentsOutputFolder -a $outputTextFilePath
+      (Eg: C:javapath\java.exe -cp sphinx4-core-all-1.0.jar edu.cmu.sphinx.tools.endpoint.Segmenter -i D:\1.wav -o D:\1\ -a D:\1\
+ 
+   2. Segment audio according to specific segments-interval file
+      $path_JavaExe -cp $path_jarFile $className -i $input -o $segmentsOutputFolder -comb $combinedIntervalsFile
+      (Eg: C:javapath\java.exe -cp sphinx4-core-all-1.0.jar edu.cmu.sphinx.tools.endpoint.Segmenter -i D:\1.wav -o D:\1\ -comb D:\combined_segments_interval.txt
+
+
+*************************************************MAGiC***********************************************
+
+
+
 Sphinx-4 Speech Recognition System
 -------------------------------------------------------------------
 
