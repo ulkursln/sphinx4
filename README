@@ -20,11 +20,11 @@ Instructions to run jar file with added features:
  
    Jar file is named: sphinx4-core-all-1.0.jar
    
-   1.Segment whole audio and create segments-interval file
+   1.Segment whole audio and create the segments-interval file
       $path_JavaExe -cp $path_jarFile $className -i $input -o $segmentsOutputFolder -a $outputTextFilePath
       (Eg: C:javapath\java.exe -cp sphinx4-core-all-1.0.jar edu.cmu.sphinx.tools.endpoint.Segmenter -i D:\1.wav -o D:\1\ -a D:\1\
  
-   2. Segment audio according to specific segments-interval file
+   2. Segment audio according to the specific segments-interval file
       $path_JavaExe -cp $path_jarFile $className -i $input -o $segmentsOutputFolder -comb $combinedIntervalsFile
       (Eg: C:javapath\java.exe -cp sphinx4-core-all-1.0.jar edu.cmu.sphinx.tools.endpoint.Segmenter -i D:\1.wav -o D:\1\ -comb D:\combined_segments_interval.txt
 
