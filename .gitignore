@@ -3,8 +3,15 @@
 .gradle
 /build
 /buildSrc/build
-/subprojects/*/build
-/subprojects/docs/src/samples/*/*/build
+/sphinx4-core/*/build
+/sphinx4-data/*/build
+/sphinx4-samples/*/build
+/sphinx4-core/build
+/sphinx4-data/build
+/sphinx4-samples/build
+/sphinx4-core/docs/src/samples/*/*/build
+/sphinx4-data/docs/src/samples/*/*/build
+/sphinx4-samples/docs/src/samples/*/*/build
 /subprojects/internal-android-performance-testing/build-android-libs
 
 # IDEA
@@ -28,8 +35,16 @@
 *.project
 *.settings
 /bin
-/subprojects/*/bin
+/sphinx4-core/*/bin
+/sphinx4-data/*/bin
+/sphinx4-samples/*/bin
+/sphinx4-core/bin
+/sphinx4-data/bin
+/sphinx4-samples/bin
 atlassian-ide-plugin.xml
+doc/
+.settings/
+.gradle/
 
 # NetBeans
 # --------
