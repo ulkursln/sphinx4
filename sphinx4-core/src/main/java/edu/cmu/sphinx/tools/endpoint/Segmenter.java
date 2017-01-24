@@ -1,10 +1,22 @@
 package edu.cmu.sphinx.tools.endpoint;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
+
+import java.io.*;
 
 import edu.cmu.sphinx.frontend.Data;
 import edu.cmu.sphinx.frontend.FrontEnd;
@@ -15,6 +27,8 @@ import edu.cmu.sphinx.util.props.ConfigurationManagerUtils;
 
 public class Segmenter {
 
+	static String txtPath="";
+	static String resegmentAudioFile=null;
     public static void main(String[] argv) throws MalformedURLException,
             IOException {
 
@@ -23,6 +37,7 @@ public class Segmenter {
         String inputCtl = null;
         String outputFile = null;
         boolean noSplit = false;
+        
 
         for (int i = 0; i < argv.length; i++) {
             if (argv[i].equals("-c")) {
@@ -39,6 +54,12 @@ public class Segmenter {
             }
             if (argv[i].equals("-no-split")) {
                 noSplit = Boolean.parseBoolean(argv[i]);
+            }
+            if (argv[i].equals("-a")) {
+            	txtPath =argv[++i];
+            }
+            if (argv[i].equals("-comb")) {
+            	resegmentAudioFile =argv[++i];
             }
         }
 
@@ -66,11 +87,37 @@ public class Segmenter {
             ConfigurationManagerUtils.setProperty(cm, "wavWriter",
                     "isCompletePath", "true");
         }
+        
+        if(resegmentAudioFile!=null)
+        	processCombined (inputFile, outputFile, cm);
+        
+        else{
 
         if (inputCtl == null)
             processFile(inputFile, outputFile, cm);
         else
             processCtl(inputCtl, inputFile, outputFile, cm);
+        }
+    }
+    
+    static private void processCombined(String inputFile, String outputFile,
+            ConfigurationManager cm) throws MalformedURLException, IOException {
+
+        FrontEnd frontend = (FrontEnd) cm.lookup("endpointer");
+
+        AudioFileDataSource dataSource = (AudioFileDataSource) cm
+                .lookup("audioFileDataSource");
+        System.out.println(inputFile);
+        dataSource.setAudioFile(new File(inputFile), null);
+        WavWriter wavWriter = (WavWriter) cm.lookup("wavWriter");
+        wavWriter.setOutFilePattern(outputFile);
+        wavWriter.inputAudioFile=inputFile;
+        wavWriter.combinedSegmentFile = resegmentAudioFile;
+        wavWriter.intervalsOfSegments="";
+        frontend.initialize();
+        wavWriter.writeFileByUsingCombinedSegments();
+        
+        
     }
 
     static private void processFile(String inputFile, String outputFile,
@@ -84,13 +131,32 @@ public class Segmenter {
         dataSource.setAudioFile(new File(inputFile), null);
         WavWriter wavWriter = (WavWriter) cm.lookup("wavWriter");
         wavWriter.setOutFilePattern(outputFile);
-
+        wavWriter.inputAudioFile=inputFile;
         frontend.initialize();
+        
 
+       
+       
         Data data = null;
         do {
             data = frontend.getData();
         } while (data != null);
+        
+        try{
+                Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(txtPath+"segments_interval.txt"), "utf-8"));
+    		    writer.write(wavWriter.intervalsOfSegments);
+    		    writer.close();
+    		} catch (UnsupportedEncodingException e1) {
+    			// TODO Auto-generated catch block
+    			e1.printStackTrace();
+    		} catch (FileNotFoundException e1) {
+    			// TODO Auto-generated catch block
+    			e1.printStackTrace();
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+        
     }
 
     static private void processCtl(String inputCtl, String inputFolder,

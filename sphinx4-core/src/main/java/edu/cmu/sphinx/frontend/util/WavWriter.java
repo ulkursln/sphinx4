@@ -9,7 +9,12 @@ import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 
 
 /**
@@ -45,7 +50,14 @@ public class WavWriter extends BaseDataProcessor {
 
     private ByteArrayOutputStream baos;
     private DataOutputStream dos;
-
+    String fileInp;
+    String fileLast;
+    long previous_record_ending=0;
+    public static String intervalsOfSegments="";
+    public String inputAudioFile="";
+    public String combinedSegmentFile="";
+    
+    
     private int sampleRate;
     private boolean isInSpeech;
 
@@ -97,7 +109,7 @@ public class WavWriter extends BaseDataProcessor {
         initialize();
     }
     
-    @Override
+    @Override  
     public Data getData() throws DataProcessingException {
         Data data = getPredecessor().getData();
 
@@ -107,6 +119,7 @@ public class WavWriter extends BaseDataProcessor {
         if (data instanceof DataStartSignal || (data instanceof SpeechStartSignal && captureUtts)) {
             baos = new ByteArrayOutputStream();
             dos = new DataOutputStream(baos);
+            fileInp=new String();
         }
 
 
@@ -130,9 +143,15 @@ public class WavWriter extends BaseDataProcessor {
             DoubleData dd = data instanceof DoubleData ? (DoubleData) data : DataUtil.FloatData2DoubleData((FloatData) data);
             double[] values = dd.getValues();
 
+            if(fileInp.isEmpty()){
+              fileInp=String.valueOf(dd.getCollectTime());
+            }
+            fileLast=String.valueOf(dd.getCollectTime());
+
             for (double value : values) {
                 try {
                     dos.writeShort(new Short((short) value));
+                    
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -142,7 +161,7 @@ public class WavWriter extends BaseDataProcessor {
         return data;
     }
 
-
+    
     private static String getNextFreeIndex(String outPattern) {
 
         int fileIndex = 0;
@@ -244,13 +263,85 @@ public class WavWriter extends BaseDataProcessor {
         AudioInputStream ais = new AudioInputStream(bais, wavFormat, abAudioData.length / wavFormat.getFrameSize());
 
         File outWavFile = new File(wavName);
-
+        
+    
+      //code added for MAGiC
+        int dot = wavName.lastIndexOf('.');
+        String base = (dot == -1) ? wavName : wavName.substring(0, dot);
+        int index = base.lastIndexOf('\\');
+        String indexNum= base.substring(index+1,base.length());
+        
+       
+        if(Long.valueOf(fileLast) > (previous_record_ending+1)){
+        	
+        	copyAudio(inputAudioFile, wavName, (previous_record_ending+1), (Long.valueOf(fileInp) - previous_record_ending+1) );
+ 			intervalsOfSegments+=indexNum+"		"+previous_record_ending+" "+fileInp+ " length:"+(Long.valueOf(fileInp)-previous_record_ending)+"\n"+"\n";
+        }
+         intervalsOfSegments+=(Integer.parseInt(indexNum) +1)+"		"+fileInp+" "+fileLast+ " length:"+ (Long.valueOf(fileLast)-Long.valueOf(fileInp))+"\n"+"\n";
+		
+         wavName = getNextFreeIndex(outFileNamePattern);
+         previous_record_ending = Long.valueOf(fileLast);
+         //
+         
         if (AudioSystem.isFileTypeSupported(outputType, ais)) {
             try {
-                AudioSystem.write(ais, outputType, outWavFile);
+                AudioSystem.write(ais, outputType, new File(wavName));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }   	
     }
+    
+    
+    
+    /**
+    * Writes the current stream to disc; override this method if you want to take 
+    * additional action on file writes
+    */
+    public void writeFileByUsingCombinedSegments() {
+        
+
+      String wavName;
+    
+    	try {
+			for (String line : Files.readAllLines(Paths.get(combinedSegmentFile))) {
+			       
+				String[] items= line.split(" ");
+				wavName = getNextFreeIndex(outFileNamePattern);
+			    copyAudio(inputAudioFile, wavName, Long.valueOf(items[1]), (Long.valueOf(items[5]) - Long.valueOf(items[1])) );
+
+			}
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+      
+        
+    }
+    public static void copyAudio(String sourceFileName, String destinationFileName, long startMilliSecond, long milliSecondsToCopy) {
+        AudioInputStream inputStream = null;
+        AudioInputStream shortenedStream = null;
+        try {
+          File file = new File(sourceFileName);
+          AudioFileFormat fileFormat = AudioSystem.getAudioFileFormat(file);
+          AudioFormat format = fileFormat.getFormat();
+          inputStream = AudioSystem.getAudioInputStream(file);
+          int bytesPerSecond = format.getFrameSize() * (int)format.getFrameRate();
+          inputStream.skip(startMilliSecond * bytesPerSecond / 1000 );
+          long framesOfAudioToCopy = milliSecondsToCopy * (int)format.getFrameRate() / 1000 ;
+          shortenedStream = new AudioInputStream(inputStream, format, framesOfAudioToCopy);
+          File destinationFile = new File(destinationFileName);
+          AudioSystem.write(shortenedStream, fileFormat.getType(), destinationFile);
+        } catch (Exception e) {
+          System.out.println(e);
+        } finally {
+        	if (inputStream != null) try { inputStream.close(); } catch (Exception e) { System.out.println(e); }
+            if (shortenedStream != null) try { shortenedStream.close(); } catch (Exception e) { System.out.println(e); }
+        }
+      }
+
 }
