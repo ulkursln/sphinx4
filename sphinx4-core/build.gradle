@@ -1,4 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
 description = 'Sphinx4 core'
+
+version = '1.0'
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'sphinx-core',
+        	'Implementation-Version': version,
+        	'Main-Class': 'edu.cmu.sphinx.tools.endpoint.Segmenter'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+
 
 dependencies {
     compile project(':sphinx4-data')
